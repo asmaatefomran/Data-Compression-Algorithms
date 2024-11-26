@@ -1,6 +1,7 @@
 import heapq
 from collections import defaultdict
 
+
 # Calculate the frequency of characters in the data
 def calc_freq(data):
     fr = defaultdict(int)
@@ -52,52 +53,130 @@ def get_codes(node, currcode="", codes=None):
     return codes
 
 
-#reverse the codes map so it can be used by Decompress function
+# Reverse the codes map so it can be used by Decompress function
 def reverseMap(codes):
-    reveresed={}
-    for c,code in codes.items():
-        reveresed[code]=c
+    reversed_map = {}
+    for c, code in codes.items():
+        reversed_map[code] = c
 
-    return reveresed
+    return reversed_map
 
 
-#compress function after building the Huffman tree
-def Compress (data,codes):
-    ret=""
+# Compress function after building the Huffman tree
+def Compress(data, codes):
+    ret = ""
     for c in data:
-        ret+=codes[c]
+        ret += codes[c]
     return ret
 
 
+# Decompress function using the Huffman codes
+def Decompress(compData, codes):
+    nwcodes = reverseMap(codes)
 
-#Decompress function using the huffman codes that we get
-def Decompress(compData,codes):
-    nwcodes=reverseMap(codes)
-
-    curr=""
-    ret=""
-    start=0
+    curr = ""
+    ret = ""
+    start = 0
     while start < len(compData):
-        curr+=compData[start]
+        curr += compData[start]
         if curr in nwcodes:
-            ret+=nwcodes[curr]
-            curr=""
-        start+=1
+            ret += nwcodes[curr]
+            curr = ""
+        start += 1
     return ret
 
 
+# Compress function for files
+def compress_file(input_file, compressed_file, codes_file):
+    with open(input_file, 'r') as infile:
+        data = infile.read()
 
-# Example usage
-data = "asmaa atef"
-freq = calc_freq(data)
-huffman_root = buildHuffman(freq)
-huffman_codes = get_codes(huffman_root)
-compressed=Compress(data,huffman_codes)
-decompressed=Decompress(compressed,huffman_codes)
-print("Huffman Codes:", huffman_codes)
-print("Compressed:", compressed)
-print("DeCompressed:", decompressed)
+    freq = calc_freq(data)
+    huffman_root = buildHuffman(freq)
+    huffman_codes = get_codes(huffman_root)
+    compressed_data = Compress(data, huffman_codes)
+
+    with open(compressed_file, 'w') as outfile:
+        outfile.write(compressed_data)
+    with open(codes_file, 'w') as codes_outfile:
+        for char, code in huffman_codes.items():
+            char_representation = 'SPACE' if char == ' ' else char
+            codes_outfile.write(f"{char_representation}:{code}\n")
 
 
+# Decompress function for files
+def decompress_file(compressed_file, codes_file, output_file):
+    with open(compressed_file, 'r') as infile:
+        compressed_data = infile.read()
+
+    codes = {}
+    with open(codes_file, 'r') as codes_infile:
+        for line in codes_infile:
+            char, code = line.strip().split(':', 1)
+            char = ' ' if char == 'SPACE' else char
+            codes[char] = code
+
+    decompressed_data = Decompress(compressed_data, codes)
+
+    with open(output_file, 'w') as outfile:
+        outfile.write(decompressed_data)
 
 
+# Test for file operations
+def test_file_operations():
+    input_filename = 'test_input.txt'
+    compressed_filename = 'test_compressed.txt'
+    codes_filename = 'test_codes.txt'
+    decompressed_filename = 'test_decompressed.txt'
+    test_data = "asmaa atef with file"
+
+    with open(input_filename, 'w') as infile:
+        infile.write(test_data)
+
+    print("\nTesting file compression...")
+    compress_file(input_filename, compressed_filename, codes_filename)
+
+    with open(compressed_filename, 'r') as compressed_file:
+        compressed_data = compressed_file.read()
+    print("Compressed Data:", compressed_data)
+
+    print("Huffman Codes:")
+    with open(codes_filename, 'r') as codes_file:
+        codes_data = codes_file.readlines()
+    for line in codes_data:
+        print(line.strip())
+
+    print("\nTesting file decompression...")
+    decompress_file(compressed_filename, codes_filename, decompressed_filename)
+
+    with open(decompressed_filename, 'r') as decompressed_file:
+        decompressed_data = decompressed_file.read()
+    print("Decompressed Data:", decompressed_data)
+
+    # Verify correctness
+    assert decompressed_data == test_data, "File decompression failed!"
+    print("\nFile compression and decompression test passed successfully!")
+
+
+# Test for in-memory operations
+def test_logic():
+    test_data = "asmaa atef without file"
+    freq = calc_freq(test_data)
+    huffman_root = buildHuffman(freq)
+    huffman_codes = get_codes(huffman_root)
+    compressed_data = Compress(test_data, huffman_codes)
+
+    print("\nLogic Test Results:")
+    print("Huffman Codes:", huffman_codes)
+    print("Compressed Data:", compressed_data)
+
+    decompressed_data = Decompress(compressed_data, huffman_codes)
+    print("Decompressed Data:", decompressed_data)
+
+    assert decompressed_data == test_data, "Logic decompression failed!"
+    print("\nLogic test passed successfully!")
+
+
+# Run tests
+test_logic()
+test_file_operations()
