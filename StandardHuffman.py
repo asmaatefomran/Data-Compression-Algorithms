@@ -52,6 +52,15 @@ def get_codes(node, currcode="", codes=None):
     return codes
 
 
+#reverse the codes map so it can be used by Decompress function
+def reverseMap(codes):
+    reveresed={}
+    for c,code in codes.items():
+        reveresed[code]=c
+
+    return reveresed
+
+
 #compress function after building the Huffman tree
 def Compress (data,codes):
     ret=""
@@ -62,19 +71,32 @@ def Compress (data,codes):
 
 
 #Decompress function using the huffman codes that we get
+def Decompress(compData,codes):
+    nwcodes=reverseMap(codes)
 
+    curr=""
+    ret=""
+    start=0
+    while start < len(compData):
+        curr+=compData[start]
+        if curr in nwcodes:
+            ret+=nwcodes[curr]
+            curr=""
+        start+=1
+    return ret
 
 
 
 # Example usage
-data = "sddkndss"
+data = "asmaa atef"
 freq = calc_freq(data)
 huffman_root = buildHuffman(freq)
 huffman_codes = get_codes(huffman_root)
 compressed=Compress(data,huffman_codes)
-
+decompressed=Decompress(compressed,huffman_codes)
 print("Huffman Codes:", huffman_codes)
 print("Compressed:", compressed)
+print("DeCompressed:", decompressed)
 
 
 
